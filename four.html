@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CRUD Example</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+      background-color: #f19a9a;
+    }
+   
+    h1, h2 {
+      margin-bottom: 10px;
+      text-decoration-color: red;
+    }
+   
+    ul {
+      margin-top: 0;
+      padding-left: 20px;
+    }
+   
+    li {
+      list-style-type: disc;
+    }
+   
+    button {
+      margin-right: 10px;
+    }
+   
+    .input-group {
+      margin-bottom: 10px;
+    }
+   
+    .input-group input {
+      margin-right: 10px;
+    }
+  </style>
+  <script src="https://unpkg.com/react@17.0.2/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+
+  <script type="text/babel">
+    const { useState } = React;
+
+
+    const App = () => {
+      const [routes, setRoutes] = useState([]);
+      const [legs, setLegs] = useState([]);
+      const [cities, setCities] = useState([]);
+
+
+      // Add a new route
+      const addRoute = () => {
+        const newRoute = {
+          id: routes.length + 1,
+          legs: [],
+        };
+        setRoutes([...routes, newRoute]);
+      };
+
+
+      // Delete a route
+      const deleteRoute = (routeId) => {
+        const updatedRoutes = routes.filter((route) => route.id !== routeId);
+        setRoutes(updatedRoutes);
+
+
+        // Remove associated legs of the deleted route
+        const updatedLegs = legs.filter((leg) => leg.routeId !== routeId);
+        setLegs(updatedLegs);
+      };
+
+
+      // Add a new leg to a route
+      const addLeg = (routeId, city1, city2, cost) => {
+        const newLeg = {
+          id: legs.length + 1,
+          routeId,
+          city1,
+          city2,
+          cost,
+        };
+        setLegs([...legs, newLeg]);
+
+
+        // Update the route with the new leg
+        const updatedRoutes = routes.map((route) =>
+          route.id === routeId ? { ...route, legs: [...route.legs, newLeg] } : route
+        );
+        setRoutes(updatedRoutes);
+      };
+
+
+      // Delete a leg
+      const deleteLeg = (legId, routeId) => {
+        const updatedLegs = legs.filter((leg) => leg.id !== legId);
+        setLegs(updatedLegs);
+
+
+        // Update the route by removing the deleted leg
+        const updatedRoutes = routes.map((route) =>
+          route.id === routeId ? { ...route, legs: route.legs.filter((leg) => leg.id !== legId) } : route
+        );
+        setRoutes(updatedRoutes);
+      };
+
+
+      // Update the cost of a leg
+      const updateLegCost = (legId, routeId, newCost) => {
+        const updatedLegs = legs.map((leg) =>
+          leg.id === legId ? { ...leg, cost: newCost } : leg
+        );
+        setLegs(updatedLegs);
+
+
+        // Update the route with the updated leg cost
+        const updatedRoutes = routes.map((route) =>
+          route.id === routeId ? { ...route, legs: route.legs.map((leg) => (leg.id === legId ? { ...leg, cost: newCost } : leg)) } : route
+        );
+        setRoutes(updatedRoutes);
+      };
+
+
+      // Add a new city
+      const addCity = (name) => {
+        const newCity = {
+          id: cities.length + 1,
+          name,
+        };
+        setCities([...cities, newCity]);
+      };
+
+
+      // Calculate the total cost of the trip
+      const calculateTotalCost = () => {
+        let totalCost = 0;
+        legs.forEach((leg) => {
+          totalCost += leg.cost;
+        });
+        return totalCost;
+      };
+
+
+      // Prompt the user to enter City A and City B
+      const enterCities = () => {
+        const city1 = prompt("Enter City A:");
+        const city2 = prompt("Enter City B:");
+        if (city1 && city2) {
+          addLeg(null, city1, city2, 0);
+        }
+      };
+
+
+      return (
+        <div>
+          <h1><i>CRUD Example</i></h1>
+
+
+          <h2>Routes</h2>
+          <button onClick={addRoute}>Add Route</button>
+          <ul>
+            {routes.map((route) => (
+              <li key={route.id}>
+                Route {route.id}
+                <button onClick={() => deleteRoute(route.id)}>Delete</button>
+                <ul>
+                  {route.legs.map((leg) => (
+                    <li key={leg.id}>
+                      Leg: {leg.city1} - {leg.city2}, Cost: {leg.cost}
+                      <button onClick={() => deleteLeg(leg.id, route.id)}>Delete</button>
+                      <input type="number" value={leg.cost} onChange={(e) => updateLegCost(leg.id, route.id, parseInt(e.target.value))} />
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={() => addLeg(route.id, "City A", "City B", 100)}>Add Leg</button>
+              </li>
+            ))}
+          </ul>
+
+
+          <h2>Cities</h2>
+          <button onClick={enterCities}>Add City</button>
+          <ul>
+            {cities.map((city) => (
+              <li key={city.id}>{city.name}</li>
+            ))}
+          </ul>
+
+
+          <h2>Total Cost</h2>
+          <p>{calculateTotalCost()}</p>
+        </div>
+      );
+    };
+
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+</body>
+</html>
